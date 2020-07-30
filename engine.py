@@ -59,7 +59,7 @@ def print_grid(arr):
         print("")
 
 
-def generate_grid():
+def generate_grid(attempts):
     global counter
     
     def fill_grid(arr):
@@ -108,7 +108,6 @@ def generate_grid():
     board = [[0 for i in range(0, 9)] for j in range(0, 9)]
 
     counter = 1
-    attempts = 40
 
     fill_grid(board)
 

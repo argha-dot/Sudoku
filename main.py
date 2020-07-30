@@ -3,6 +3,14 @@ import pygame
 from pygame.locals import *
 import engine
 
+pygame.init()
+
+win_wt, win_ht = (9*16*4), (11*16*4)
+fps_clock = pygame.time.Clock()
+fps = 60
+
+win = pygame.display.set_mode((win_wt, win_ht))
+number_font = pygame.font.Font(os.path.join("assets", "font.ttf"), 20)
 
 def terminate():
     pygame.quit()
@@ -14,11 +22,11 @@ def out_events():
         if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
             terminate()
 
-win_wt, win_ht = (9*16*4), (11*16*4)
-fps_clock = pygame.time.Clock()
-fps = 60
+def print_text(font, text, x, y):
+    win.blit(font.render(str(text), True, (0, 0, 0)), (x, y))
+    pass
 
-win = pygame.display.set_mode((win_wt, win_ht))
+
 
 class Board(object):
 
@@ -26,6 +34,7 @@ class Board(object):
         self.board = board
 
     def draw(self, win):
+
         for i in range(0, 10):
 
             # horizontal lines
@@ -44,9 +53,10 @@ class Board(object):
                                                 64 + 45), (45 + (i * 54), win_ht - 64 - 45))
             pass
         
-        for i in range(0, 9):
-            for j in range(0, 9):
-                
+        for row in range(0, 9):
+            for col in range(0, 9):
+                if self.board[row][col] != 0:
+                    print_text(number_font, self.board[row][col], row*54 + 45 + 27 - 10, col*54 + 54 + 45 + 27)
                 pass
             pass
         
@@ -54,9 +64,9 @@ class Board(object):
 
 
 def main():
-    pygame.init()
 
-    grid = engine.generate_grid()
+    grid = engine.generate_grid(15)
+    engine.print_grid(grid)
 
     def run_game():
 
