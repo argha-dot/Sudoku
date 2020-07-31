@@ -13,9 +13,7 @@ def main():
                   [0, 0, 0, 0, 0, 0, 0, 7, 4],
                   [0, 0, 5, 2, 0, 6, 3, 0, 0]]
 
-    game_board = generate_grid(40)
-
-    back_up = game_board[:]
+    backup, game_board = generate_grid(40)
 
     print_grid(game_board)
 

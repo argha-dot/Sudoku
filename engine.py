@@ -1,4 +1,4 @@
-import random
+import random, copy
 
 def isValid(arr, row, col, num):
 
@@ -110,6 +110,8 @@ def generate_grid(attempts):
     counter = 1
 
     fill_grid(board)
+    
+    backup = copy.deepcopy(board)
 
     while attempts > 0:
         row, col = random.randint(0, 8), random.randint(0, 8)
@@ -120,19 +122,19 @@ def generate_grid(attempts):
         back = board[row][col]
         board[row][col] = 0
 
-        # copy = board.copy()
-        copy = []
-        for r in range(0,9):
-            copy.append([])
-            for c in range(0,9):
-                copy[r].append(board[r][c])
+        _copy = copy.deepcopy(board)
+        # for r in range(0,9):
+        #     _copy.append([])
+        #     for c in range(0,9):
+        #         _copy[r].append(board[r][c])
 
         counter = 0
 
-        solve_(copy)
+        solve_(_copy)
         if counter != 1:
             board[row][col] = back
 
         attempts -= 1        
 
-    return (board)
+    return backup, board
+
