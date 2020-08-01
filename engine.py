@@ -123,10 +123,6 @@ def generate_grid(attempts):
         board[row][col] = 0
 
         _copy = copy.deepcopy(board)
-        # for r in range(0,9):
-        #     _copy.append([])
-        #     for c in range(0,9):
-        #         _copy[r].append(board[r][c])
 
         counter = 0
 
