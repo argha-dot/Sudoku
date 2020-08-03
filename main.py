@@ -3,6 +3,8 @@ import pygame
 from pygame.locals import *
 import engine
 
+# Image by OpenClipart-Vectors from Pixabay
+
 pygame.init()
 os.environ["SDL_VIDEO_WINDOW_POS"] = "1, 1"
 
@@ -14,6 +16,8 @@ win = pygame.display.set_mode((win_wt, win_ht))
 number_font = pygame.font.Font(os.path.join("assets", "font.ttf"), 20)
 text_font = pygame.font.Font(os.path.join("assets", "type.ttf"), 50)
 text_font_2 = pygame.font.Font(os.path.join("assets", "type.ttf"), 35)
+tick_img = pygame.image.load(os.path.join("assets", "tick.png")).convert_alpha()
+cross_img = pygame.image.load(os.path.join("assets", "cross.png")).convert_alpha()
 
 BLACK = (0, 0, 0)
 GREY = (100, 100, 100)
@@ -99,6 +103,7 @@ class Board(object):
         self.nums = [Cell(self.board[i][j], j*54 +
                           27 + 19, i*54 + 45 + 27 + 38, i, j) for j in range(self.cols) for i in range(self.rows)]
         self.selected = [0, 0]
+        self.check = False
 
 
     def draw(self, win):
@@ -176,7 +181,11 @@ class Board(object):
                     return self.selected
 
 
-    def check(self):
+    def check_press(self):
+        if self.check:
+            self.check = False
+        else:
+            self.check = True
         pass
 
     def select_box(self, pos):
@@ -185,7 +194,7 @@ class Board(object):
         elif self.reset_box.collidepoint(pos):
             self.reset()
         elif self.check_box.collidepoint(pos):
-            self.check()
+            self.check_press()
         
 
     def clear(self):
@@ -203,7 +212,6 @@ class Board(object):
 def main():
 
     _, grid = engine.generate_grid(45)
-
     # engine.print_grid(grid)
     engine.print_grid(_)
 
@@ -255,13 +263,20 @@ def main():
                             board.select_box(pos)
                             pass
 
-            check_against = copy.deepcopy(board.backup)
-            engine.solve_grid(check_against)
-            if board.board == check_against:
-                pygame.draw.rect(
-                    win, (0, 200, 0), [win_wt//2 - 160, win_ht//2 - 80, 320, 160])
-                pygame.draw.rect(
-                    win, BLACK, [win_wt//2 - 160, win_ht//2 - 80, 320, 160], 3)
+            if engine.find_empty_loc(board.board) == None:
+                board.check = True
+                pass
+
+            if board.check: 
+                check_against = copy.deepcopy(board.backup)
+                engine.solve_grid(check_against)
+                if board.board == check_against:
+                    win.blit(tick_img, [
+                            win_wt//2 - tick_img.get_width()//2, win_ht//2 - tick_img.get_height()//2])
+                else:
+                    win.blit(cross_img, [
+                            win_wt//2 - tick_img.get_width()//2, win_ht//2 - cross_img.get_height()//2])
+                    pass
 
 
             if board.selected and key != None:
@@ -281,5 +296,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # print(one_d(9, 9))
     pygame.quit()
