@@ -80,10 +80,13 @@ class Cell(object):
         if self.value != 0:
             print_text(number_font, self.value, self.x + 17, self.y + 17)
         if self.selected:
-            pygame.draw.rect(win, (200, 0, 0), [45 + (self.col * 54), 109 + (self.row * 54), 54, 54], 3)
+            pygame.draw.rect(win, (200, 0, 0), [
+                             45 + (self.col * 54), 109 + (self.row * 54), 54, 54], 3)
 
 
 class Board(object):
+
+    # TODO Fix the check thingy
 
     def __init__(self, board):
         self.cols = 9
@@ -91,15 +94,17 @@ class Board(object):
         self.board = board
         self.backup = copy.deepcopy(board)
         self.solve_box = pygame.Rect(45, 20, 54*2, 54)
-        self.reset_box = pygame.Rect(45 + 54*2 + 27, 20, 54*2, 54)
-        self.rough_box = pygame.Rect(45 + 54*5, 20, 54*2, 54)
+        self.reset_box = pygame.Rect(45 + 54*2, 20, 54*2, 54)
+        self.check_box = pygame.Rect(45 + 54*5, 20, 54*2, 54)
         self.nums = [Cell(self.board[i][j], j*54 +
                           27 + 19, i*54 + 45 + 27 + 38, i, j) for j in range(self.cols) for i in range(self.rows)]
         self.selected = [0, 0]
 
+
     def draw(self, win):
 
-        win.fill([74, 144, 226])
+        # win.fill([74, 144, 226])
+        win.fill([78, 88, 74])
         
         # Grids
         for i in range(0, 10):
@@ -127,17 +132,18 @@ class Board(object):
         pygame.draw.rect(win, BLACK, self.reset_box, 1)
         print_text(text_font_2, "Reset", self.reset_box.x + 22, self.solve_box.y + 5)
 
-        pygame.draw.rect(win, BLACK, self.rough_box, 1)
-        print_text(text_font_2, "Rough", self.rough_box.x +
-                   5, self.solve_box.y + 3)
+        pygame.draw.rect(win, BLACK, self.check_box, 1)
+        print_text(text_font_2, "Check", self.check_box.x +
+                   18, self.check_box.y + 5)
 
 
         for cell in self.nums:
             if self.backup[cell.row][cell.col] != 0:
                 pygame.draw.rect(
                     win, (24, 48, 75), [cell.rect[0]+6, cell.rect[1]+6, cell.rect[2]-16, cell.rect[3]-12], 0)
-            if cell.rect.collidepoint(pygame.mouse.get_pos()):
-                pygame.draw.rect(win, GREY, [cell.rect[0]+6, cell.rect[1]+6, cell.rect[2]-16, cell.rect[3]-12], 0)
+            if cell.rect.collidepoint(pygame.mouse.get_pos()) & (self.backup[cell.row][cell.col] == 0):
+                pygame.draw.rect(win, (123, 114, 67), [
+                                 cell.rect[0]+6, cell.rect[1]+6, cell.rect[2]-16, cell.rect[3]-12], 0)
             cell.draw(win)
 
 
@@ -150,6 +156,7 @@ class Board(object):
     def reset(self):
         self.board = copy.deepcopy(self.backup)
         self.cell_update()
+
 
     def _solve(self):
         self.reset()
@@ -169,11 +176,16 @@ class Board(object):
                     return self.selected
 
 
+    def check(self):
+        pass
+
     def select_box(self, pos):
         if self.solve_box.collidepoint(pos):
             self._solve()
         elif self.reset_box.collidepoint(pos):
             self.reset()
+        elif self.check_box.collidepoint(pos):
+            self.check()
         
 
     def clear(self):
@@ -201,7 +213,8 @@ def main():
         key = None
         
         while True:
-            # out_events()
+            board.draw(win)     
+            
             for event in pygame.event.get():
                 if event.type == QUIT:
                     terminate() 
@@ -242,19 +255,19 @@ def main():
                             board.select_box(pos)
                             pass
 
-                        
+            check_against = copy.deepcopy(board.backup)
+            engine.solve_grid(check_against)
+            if board.board == check_against:
+                pygame.draw.rect(
+                    win, (0, 200, 0), [win_wt//2 - 160, win_ht//2 - 80, 320, 160])
+                pygame.draw.rect(
+                    win, BLACK, [win_wt//2 - 160, win_ht//2 - 80, 320, 160], 3)
+
+
             if board.selected and key != None:
                 board.edit(key)
                 key = None
                 pass
-
-
-            board.draw(win)     
-            
-            if board.board == _:
-                # pygame.draw.rect(win, BLACK, [win_wt//2 - 160, win_ht//2 - 80, 320, 160], 5)
-                pass
-              
             
             dt = fps_clock.tick(fps) / 1000
             dt *= 60
