@@ -1,4 +1,4 @@
-import random, copy
+import random, copy, pprint
 
 def isValid(arr, row, col, num):
 
@@ -90,7 +90,6 @@ def generate_grid(attempts):
         loc = find_empty_loc(arr)
 
         if (loc == None):
-            counter += 1
             return True
 
         row, col = loc[0], loc[1]
@@ -98,8 +97,13 @@ def generate_grid(attempts):
         for num in range(1, 10):
             if (isValid(arr, row, col, num)):
                 arr[row][col] = num
-                if solve_(arr):
-                    return True                
+                if not find_empty_loc(arr):
+                    counter += 1
+                    break
+                else:
+                    if solve_(arr):
+                        return True                
+                
                 arr[row][col] = 0
         
         return False

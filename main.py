@@ -4,7 +4,7 @@ from pygame.locals import *
 import engine
 
 pygame.init()
-os.environ["SDL_VIDEO_WINDOW_POS"] = "0, 0"
+os.environ["SDL_VIDEO_WINDOW_POS"] = "1, 1"
 
 win_wt, win_ht = (9*16*4), (11*16*4)
 fps_clock = pygame.time.Clock()
@@ -91,7 +91,7 @@ class Board(object):
         self.board = board
         self.backup = copy.deepcopy(board)
         self.solve_box = pygame.Rect(45, 20, 54*2, 54)
-        self.erase_box = pygame.Rect(45 + 54*2 + 27, 20, 54*2, 54)
+        self.reset_box = pygame.Rect(45 + 54*2 + 27, 20, 54*2, 54)
         self.rough_box = pygame.Rect(45 + 54*5, 20, 54*2, 54)
         self.nums = [Cell(self.board[i][j], j*54 +
                           27 + 19, i*54 + 45 + 27 + 38, i, j) for j in range(self.cols) for i in range(self.rows)]
@@ -124,8 +124,8 @@ class Board(object):
         pygame.draw.rect(win, BLACK, self.solve_box, 1)
         print_text(text_font_2, "Solve", self.solve_box.x + 22, self.solve_box.y + 5)
 
-        pygame.draw.rect(win, BLACK, self.erase_box, 1)
-        print_text(text_font_2, "Eraser", self.erase_box.x + 5, self.solve_box.y + 3)
+        pygame.draw.rect(win, BLACK, self.reset_box, 1)
+        print_text(text_font_2, "Reset", self.reset_box.x + 22, self.solve_box.y + 5)
 
         pygame.draw.rect(win, BLACK, self.rough_box, 1)
         print_text(text_font_2, "Rough", self.rough_box.x +
@@ -147,7 +147,18 @@ class Board(object):
         pass
 
 
-    def select(self, win, pos):
+    def reset(self):
+        self.board = copy.deepcopy(self.backup)
+        self.cell_update()
+
+    def _solve(self):
+        self.reset()
+        engine.solve_grid(self.board)
+        self.cell_update()
+        
+        pass
+
+    def select_cell(self, win, pos):
         for cell in self.nums:
             if cell.rect.collidepoint(pos):
                 if self.backup[cell.row][cell.col] == 0:
@@ -157,7 +168,14 @@ class Board(object):
                     cell.selected = True
                     return self.selected
 
-    
+
+    def select_box(self, pos):
+        if self.solve_box.collidepoint(pos):
+            self._solve()
+        elif self.reset_box.collidepoint(pos):
+            self.reset()
+        
+
     def clear(self):
         self.board[self.selected[0]][self.selected[1]] = 0
         self.cell_update()
@@ -172,9 +190,10 @@ class Board(object):
 
 def main():
 
-    solved_grid, grid = engine.generate_grid(45)
-    # engine.print_grid(solved_grid)
+    _, grid = engine.generate_grid(45)
+
     # engine.print_grid(grid)
+    engine.print_grid(_)
 
     def run_game():
 
@@ -214,21 +233,29 @@ def main():
                 if (event.type == MOUSEBUTTONDOWN):
                     if event.button == 1:
                         pos = pygame.mouse.get_pos()
-                        click = board.select(win, pos)
+                        click = board.select_cell(win, pos)
                         if click:
                             key = None  
                             # print(board.selected) 
                             # print(board.board[click[0]][click[1]]) 
-                            
+                        else:
+                            board.select_box(pos)
+                            pass
+
+                        
             if board.selected and key != None:
                 board.edit(key)
+                key = None
                 pass
 
-            # if board.board == solved_grid:
-            #     print("pass")
-            #     terminate()
 
-            board.draw(win)        
+            board.draw(win)     
+            
+            if board.board == _:
+                # pygame.draw.rect(win, BLACK, [win_wt//2 - 160, win_ht//2 - 80, 320, 160], 5)
+                pass
+              
+            
             dt = fps_clock.tick(fps) / 1000
             dt *= 60
 
