@@ -1,4 +1,7 @@
-import sys, os, copy, pprint
+import sys
+import os
+import copy
+import pprint
 import pygame
 from pygame.locals import *
 import engine
@@ -6,20 +9,6 @@ import engine
 
 pygame.init()
 os.environ["SDL_VIDEO_WINDOW_POS"] = "1, 1"
-
-win_wt, win_ht = (9*16*4), (11*16*4)
-fps_clock = pygame.time.Clock()
-fps = 60
-
-win = pygame.display.set_mode((win_wt, win_ht))
-number_font = pygame.font.Font(os.path.join("assets", "font.ttf"), 20)
-text_font = pygame.font.Font(os.path.join("assets", "type.ttf"), 50)
-text_font_2 = pygame.font.Font(os.path.join("assets", "type.ttf"), 35)
-tick_img = pygame.image.load(os.path.join("assets", "tick.png")).convert_alpha()
-cross_img = pygame.image.load(os.path.join("assets", "cross.png")).convert_alpha()
-
-BLACK = (0, 0, 0)
-GREY = (100, 100, 100)
 
 
 def terminate():
@@ -32,7 +21,7 @@ def print_text(font, text, x, y):
 
 
 def load_img(name):
-    fullname = os.path.join("data", name)
+    fullname = os.path.join("assets", name)
     try:
         image = pygame.image.load(fullname)
     except pygame.error as e:
@@ -48,21 +37,55 @@ def delay(j, d):
         pygame.time.wait(d)
         i += 1
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                i = 201
+            if event.type == pygame.QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+                i = j + 1
                 terminate()
-            elif event.type == KEYDOWN:
-                if event.key == K_ESCAPE:
-                    i = 201
-                    terminate()
 
 
-def one_d(number, divisor):
-    return [number // divisor, number % divisor]
+win_wt, win_ht = (9*16*4), (11*16*4)
+fps_clock = pygame.time.Clock()
+fps = 60
+
+win = pygame.display.set_mode((win_wt, win_ht))
+ico = load_img("ico.png")
+pygame.display.set_icon(ico)
+
+number_font = pygame.font.Font(os.path.join("assets", "font.ttf"), 20)
+text_font = pygame.font.Font(os.path.join("assets", "type.ttf"), 50)
+text_font_2 = pygame.font.Font(os.path.join("assets", "type.ttf"), 35)
+tick_img = pygame.image.load(os.path.join(
+        "assets", "tick.png")).convert_alpha()
+cross_img = pygame.image.load(os.path.join(
+        "assets", "cross.png")).convert_alpha()
+
+BLACK = (0, 0, 0)
+GREY = (100, 100, 100)
+
+
+def draw_grid(win):
+    for i in range(0, 10):
+        if (i % 3) == 0:
+            # horizontal lines
+            pygame.draw.line(win, BLACK, (45, 64 + 45 + (i * 54)),
+                                (win_wt - 45, 64 + 45 + (i * 54)), 2)
+
+            # vertical lines
+            pygame.draw.line(win, BLACK, (45 + (i * 54),
+                                            64 + 45), (45 + (i * 54), win_ht - 64 - 45), 2)
+        else:
+            # horizontal lines
+            pygame.draw.line(win, BLACK, (45, 64 + 45 + (i * 54)),
+                                (win_wt - 45, 64 + 45 + (i * 54)), 1)
+
+            # vertical lines
+            pygame.draw.line(win, BLACK, (45 + (i * 54),
+                                            64 + 45), (45 + (i * 54), win_ht - 64 - 45))
+    pass
 
 
 def two_d(row, col):
     return (col) * 9 + (row + 1) - 1
+
 
 class Cell(object):
     def __init__(self, value, x, y, row, col):
@@ -75,32 +98,29 @@ class Cell(object):
         self.rect = pygame.Rect(x, y, 54, 54)
         self.selected = False
 
-    
     def __str__(self):
-        # return f"value: {self.value}\nrow: {self.row}\ncol: {self.col}"
-        return f"{self.value}"
+        return f"{self.value}, {self.row}, {self.col}"
 
-    
-    def draw(self, win):            
+    def draw(self, win):
         if self.value != 0:
             print_text(number_font, self.value, self.x + 17, self.y + 17)
         if self.selected:
             pygame.draw.rect(win, (200, 0, 0), [
                              45 + (self.col * 54), 109 + (self.row * 54), 54, 54], 3)
             pass
-    
+
     def draw_change(self, win, green=True):
-        
+
         pygame.draw.rect(win, [78, 88, 74], [self.rect[0]+6, self.rect[1]+6,
-                        self.rect[2]-16, self.rect[3]-12], 0)
+                                             self.rect[2]-16, self.rect[3]-12], 0)
 
         print_text(number_font, self.value, self.x + 17, self.y + 17)
 
         if green:
-            pygame.draw.rect(win, (0, 200, 0), [
+            pygame.draw.rect(win, BLACK, [
                              45 + (self.col * 54), 109 + (self.row * 54), 54, 54], 3)
         else:
-            pygame.draw.rect(win, (200, 0, 0), [
+            pygame.draw.rect(win, (150, 0, 0), [
                              45 + (self.col * 54), 109 + (self.row * 54), 54, 54], 3)
 
         pass
@@ -119,56 +139,44 @@ class Board(object):
         self.reset_box = pygame.Rect(45 + 54*2, 20, 54*2, 54)
         self.check_box = pygame.Rect(45 + 54*5, 20, 54*2, 54)
         self.nums = [Cell(self.board[i][j], j*54 +
-                        27 + 19, i*54 + 45 + 27 + 38, i, j) for j in range(self.cols) for i in range(self.rows)]
+                          27 + 19, i*54 + 45 + 27 + 38, i, j) for j in range(self.cols) for i in range(self.rows)]
         self.selected = [0, 0]
         self.check = False
+        # self.solved = False
 
-
-    def draw(self, win):
-
-        # win.fill([74, 144, 226])
-        win.fill([78, 88, 74])
-        
-        # Grids
-        for i in range(0, 10):
-            if (i % 3) == 0:
-                # horizontal lines
-                pygame.draw.line(win, BLACK, (45, 64 + 45 + (i * 54)),
-                                 (win_wt - 45, 64 + 45 + (i * 54)), 2)
-                
-                # vertical lines
-                pygame.draw.line(win, BLACK, (45 + (i * 54),
-                                                  64 + 45), (45 + (i * 54), win_ht - 64 - 45), 2)
-            else:
-                # horizontal lines
-                pygame.draw.line(win, BLACK, (45, 64 + 45 + (i * 54)),
-                                 (win_wt - 45, 64 + 45 + (i * 54)), 1)
-
-                # vertical lines
-                pygame.draw.line(win, BLACK, (45 + (i * 54),
-                                                64 + 45), (45 + (i * 54), win_ht - 64 - 45))
-        
+    def draw_box(self):
         if self.solve_box.collidepoint(pygame.mouse.get_pos()):
-            pygame.draw.rect(win, (123, 114, 67), [
-                self.solve_box.x+6, self.solve_box.y+6, self.solve_box.width-16, self.solve_box.height-12], 0)
+            pygame.draw.rect(win, (123, 114, 67), [self.solve_box.x+6, self.solve_box.y+6,
+                                                   self.solve_box.width-16, self.solve_box.height-12], 0)
 
         pygame.draw.rect(win, BLACK, self.solve_box, 1)
-        print_text(text_font_2, "Solve", self.solve_box.x + 22, self.solve_box.y + 5)
+        print_text(text_font_2, "Solve", self.solve_box.x +
+                   22, self.solve_box.y + 5)
 
         if self.reset_box.collidepoint(pygame.mouse.get_pos()):
-            pygame.draw.rect(win, (123, 114, 67), [
-                self.reset_box.x+6, self.reset_box.y+6, self.reset_box.width-16, self.reset_box.height-12], 0)
+            pygame.draw.rect(win, (123, 114, 67), [self.reset_box.x+6, self.reset_box.y+6,
+                                                   self.reset_box.width-16, self.reset_box.height-12], 0)
 
         pygame.draw.rect(win, BLACK, self.reset_box, 1)
-        print_text(text_font_2, "Reset", self.reset_box.x + 22, self.solve_box.y + 5)
+        print_text(text_font_2, "Reset", self.reset_box.x +
+                   22, self.solve_box.y + 5)
 
         if self.check_box.collidepoint(pygame.mouse.get_pos()):
-            pygame.draw.rect(win, (123, 114, 67), [
-                self.check_box.x+6, self.check_box.y+6, self.check_box.width-16, self.check_box.height-12], 0)
+            pygame.draw.rect(win, (123, 114, 67), [self.check_box.x+6, self.check_box.y+6,
+                                                   self.check_box.width-16, self.check_box.height-12], 0)
 
         pygame.draw.rect(win, BLACK, self.check_box, 1)
-        print_text(text_font_2, "Check", self.check_box.x + 18, self.check_box.y + 5)
+        print_text(text_font_2, "Check", self.check_box.x +
+                   18, self.check_box.y + 5)
+        pass
+    
+    def draw(self, win):
+        
+        win.fill([78, 88, 74])
 
+        draw_grid(win)
+
+        self.draw_box()
 
         for cell in self.nums:
             if self.backup[cell.row][cell.col] != 0:
@@ -179,22 +187,18 @@ class Board(object):
                                  cell.rect[0]+6, cell.rect[1]+6, cell.rect[2]-16, cell.rect[3]-12], 0)
             cell.draw(win)
 
-
     def cell_update(self):
         self.nums = [Cell(self.board[i][j], j*54 +
                           27 + 19, i*54 + 45 + 27 + 38, i, j) for j in range(self.cols) for i in range(self.rows)]
-
 
     def reset(self):
         self.board = self.backup[:]
         self.cell_update()
 
-
     def _solve(self):
         self.reset()
         engine.solve_grid(self.board)
         self.cell_update()
-
 
     def solve_(self):
         self.reset()
@@ -220,9 +224,8 @@ class Board(object):
                 self.nums[two_d(row, col)].draw_change(win, False)
                 pygame.display.update()
                 delay(2, 75)
-        
-        return False
 
+        return False
 
     def select_cell(self, win, pos):
         for cell in self.nums:
@@ -234,14 +237,12 @@ class Board(object):
                     cell.selected = True
                     return self.selected
 
-
     def check_press(self):
 
         if self.check:
             self.check = False
         else:
             self.check = True
-            
 
     def select_box(self, pos):
         if self.solve_box.collidepoint(pos):
@@ -251,12 +252,10 @@ class Board(object):
             self.reset()
         elif self.check_box.collidepoint(pos):
             self.check_press()
-        
 
     def clear(self):
         self.board[self.selected[0]][self.selected[1]] = 0
         self.cell_update()
-
 
     def edit(self, key):
         self.board[self.selected[0]][self.selected[1]] = key
@@ -265,23 +264,77 @@ class Board(object):
 
 def main():
 
-    _, grid = engine.generate_grid(45)
-    # engine.print_grid(grid)
-    engine.print_grid(_)
-
-    def run_game():
-
-        board = Board(grid)
-        key = None
+    def show_game_over_screen():
         
+        win.fill([78, 88, 74])
+        
+        draw_grid(win)
+        
+        title_img = load_img("title.png")
+        win.blit(title_img, [45 + 54, 45 + 64 + (2*54)])
+        _font = pygame.font.Font(os.path.join("assets", "font.ttf"), 64)
+        print_text(_font, "SUDOKU", 99, 108 + 90 + 45)
+        
+        _text_font = pygame.font.Font(os.path.join("assets", "type.ttf"), 54)
+        item = _text_font.render("press space to start", True, BLACK)
+        item_rect = item.get_rect()
+        item_rect.topleft = (win_wt//2 - item_rect.width//2, 45 + 64 + (8*54))
+        pygame.draw.rect(win, [78, 88, 74], [
+                         item_rect.x - 15, item_rect.y + 1, item_rect.width + 15 + 15, item_rect.height])
+        win.blit(item, item_rect)
+        
+        pygame.display.update()
+
         while True:
-            board.draw(win)     
-            
             for event in pygame.event.get():
                 if event.type == QUIT:
-                    terminate() 
-                if (event.type == KEYDOWN and event.key == K_ESCAPE):
                     terminate()
+                if (event.type == KEYDOWN):
+                    if event.key == K_ESCAPE:
+                        terminate()
+                    if event.key == K_SPACE:
+                        return
+
+
+    def animate(grid):
+        _grid = Board(grid)
+
+        win.fill([78, 88, 74])
+        draw_grid(win)
+        _grid.draw_box()
+
+        for cell in _grid.nums:
+            if _grid.backup[cell.row][cell.col] != 0:
+                pygame.draw.rect(
+                    win, (24, 48, 75), [cell.rect[0]+6, cell.rect[1]+6, cell.rect[2]-16, cell.rect[3]-12], 0)
+
+            cell.draw(win)
+            pygame.display.update()
+            delay(3, 4)
+
+        return
+    
+
+    def run_game():
+        
+        minus = 25
+        _, grid = engine.generate_grid(minus)
+        # engine.print_grid(grid)
+        # engine.print_grid(_)
+        # print("")
+
+        board = Board(grid)
+        animate(grid)
+        key = None
+
+        while True:
+            board.draw(win)
+
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    terminate()
+                if (event.type == KEYDOWN and event.key == K_ESCAPE):
+                    return
 
                 if event.type == pygame.KEYDOWN:
                     if (event.key == K_1) or (event.key == K_KP1):
@@ -310,27 +363,26 @@ def main():
                         pos = pygame.mouse.get_pos()
                         click = board.select_cell(win, pos)
                         if click:
-                            key = None  
+                            key = None
                         else:
                             board.select_box(pos)
-                            
 
             if engine.find_empty_loc(board.board) == None:
                 board.check = True
-
+                
 
             if board.check:
                 check_against = copy.deepcopy(board.backup)
                 engine.solve_grid(check_against)
                 if board.board == check_against:
                     win.blit(tick_img, [
-                            win_wt//2 - tick_img.get_width()//2, win_ht//2 - tick_img.get_height()//2])
+                        win_wt//2 - tick_img.get_width()//2, win_ht//2 - tick_img.get_height()//2])
                     pygame.display.update()
-                    delay(5, 250)
+                    delay(5, 150)
                     return
                 else:
                     win.blit(cross_img, [
-                            win_wt//2 - tick_img.get_width()//2, win_ht//2 - cross_img.get_height()//2])
+                        win_wt//2 - tick_img.get_width()//2, win_ht//2 - cross_img.get_height()//2])
                     pygame.display.update()
                     delay(5, 150)
                     board.check = False
@@ -338,17 +390,15 @@ def main():
             if board.selected and key != None:
                 board.edit(key)
                 key = None
-            
-            # dt = fps_clock.tick(fps) / 1000
-            # dt *= 60
+
             fps_clock.tick(60)
             pygame.display.update()
 
     while True:
+        show_game_over_screen()
         run_game()
 
 
 if __name__ == "__main__":
     main()
-    # print(two_d(8, 8))
     pygame.quit()
