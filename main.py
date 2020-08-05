@@ -325,10 +325,15 @@ def main():
                 if board.board == check_against:
                     win.blit(tick_img, [
                             win_wt//2 - tick_img.get_width()//2, win_ht//2 - tick_img.get_height()//2])
+                    pygame.display.update()
+                    delay(5, 250)
+                    return
                 else:
                     win.blit(cross_img, [
                             win_wt//2 - tick_img.get_width()//2, win_ht//2 - cross_img.get_height()//2])
-
+                    pygame.display.update()
+                    delay(5, 150)
+                    board.check = False
 
             if board.selected and key != None:
                 board.edit(key)
