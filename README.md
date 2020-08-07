@@ -19,4 +19,4 @@ In the start screen, use your mouse to select one of the three difficulty levels
 Click on the solve button to solve the board, click on the reset button to reset it and the check button to check whether or not your solutions are correct until that point. 
 If you solve the board correctly, it will automatically show a smiley and exit out to the main screen.
 
-Thanks for reading, to that one person who is actuall stumbled across this repo.
+Thanks for reading, to that one person who actually stumbled across this repo.
