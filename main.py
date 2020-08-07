@@ -2,16 +2,15 @@ import sys
 import os
 import random
 import copy
-import pprint
+
 import pygame
 from pygame.locals import *
+
 import engine
 
 
-pygame.init()
-os.environ["SDL_VIDEO_WINDOW_POS"] = "1, 1"
-
-# TODO tweak the check thing a bit more 
+# =========================================================================================
+# Self-Explanatory functions
 
 def terminate():
     pygame.quit()
@@ -33,6 +32,7 @@ def load_img(name):
     return image
 
 
+# Privides a delay between two lines of code.
 def delay(j, d):
     i = 0
     while i < j:
@@ -44,30 +44,46 @@ def delay(j, d):
                 i = j + 1
                 terminate()
 
+# =========================================================================================
 
+
+# =========================================================================================
+
+
+# BOILERPLATE CODDE
+pygame.init()
+os.environ["SDL_VIDEO_WINDOW_POS"] = "1, 1"
 win_wt, win_ht = (9*16*4), (11*16*4)
 fps_clock = pygame.time.Clock()
 fps = 60
-
 win = pygame.display.set_mode((win_wt, win_ht))
 ico = load_img("ico.png")
 pygame.display.set_icon(ico)
 
+
+# FONTS
 number_font = pygame.font.Font(os.path.join("assets", "font.ttf"), 20)
 text_font = pygame.font.Font(os.path.join("assets", "type.ttf"), 50)
 text_font_2 = pygame.font.Font(os.path.join("assets", "type.ttf"), 35)
-tick_img = pygame.image.load(os.path.join(
-        "assets", "tick.png")).convert_alpha()
-cross_img = pygame.image.load(os.path.join(
-        "assets", "cross.png")).convert_alpha()
-smiley = load_img("smiley.png")
 
+
+# IMAGES
+tick_img = load_img("tick.png")     # Tick Image
+cross_img = load_img("cross.png")   # Cross Image
+smiley = load_img("smiley.png")     # Smiley Image
+
+
+# COLORS
 BLACK = (0, 0, 0)
-GREY = (100, 100, 100)
 BGCOLOR = (78, 88, 74)
 
+# =========================================================================================
+
+
+# =========================================================================================
 
 def draw_grid(win):
+
     for i in range(0, 10):
         if (i % 3) == 0:
             # horizontal lines
@@ -88,14 +104,14 @@ def draw_grid(win):
     pass
 
 
+# Converts a 2-d array indexing to a 1-d array indexing.
 def two_d(row, col):
     return (col) * 9 + (row + 1) - 1
 
 
-def inc(minus):
-    minus += 20
-    print(minus)
+# =========================================================================================
 
+# Each cell that contains a number
 
 class Cell(object):
     def __init__(self, value, x, y, row, col):
@@ -106,7 +122,7 @@ class Cell(object):
         self.row = row
         self.col = col
         self.rect = pygame.Rect(x, y, 54, 54)
-        self.selected = False
+        self.selected = False       # Checks if the cell is highlighted or not
 
     def __str__(self):
         return f"{self.value}, {self.row}, {self.col}"
@@ -119,6 +135,7 @@ class Cell(object):
                              45 + (self.col * 54) + 2, 109 + (self.row * 54) + 2, 54 - 3, 54 - 3], 3)
             pass
 
+    # changes the text on the cell. Basicaly the same function as above, just with some fluff.
     def draw_change(self, win, green=True):
 
         pygame.draw.rect(win, BGCOLOR, [self.rect[0]+6, self.rect[1]+6,
@@ -129,12 +146,18 @@ class Cell(object):
         if green:
             pygame.draw.rect(win, BLACK, [
                              45 + (self.col * 54), 109 + (self.row * 54), 54, 54], 2)
+            pass
         else:
             pygame.draw.rect(win, (150, 0, 0), [
                              45 + (self.col * 54), 109 + (self.row * 54), 54, 54], 2)
 
         pass
+# =========================================================================================
 
+
+# =========================================================================================
+
+# Board Class: The meat of the program, it draws the board, the buttons, gives them the functionality and other things.
 
 class Board(object):
 
@@ -142,17 +165,21 @@ class Board(object):
         self.cols = 9
         self.rows = 9
         self.board = board
-        self.backup = copy.deepcopy(board)
+        self.backup = copy.deepcopy(board)            # Creates a copy of the original unsolved and unedited board.
+        
         self.solve_box = pygame.Rect(45, 20, 54*2, 54)
         self.reset_box = pygame.Rect(45 + 54*2, 20, 54*2, 54)
         self.check_box = pygame.Rect(45 + 54*5, 20, 54*2, 54)
-        self.nums = [Cell(self.board[i][j], j*54 + 27 + 19, i*54 + 45 + 27 + 38, i, j) 
-                                for j in range(self.cols) for i in range(self.rows)]
-        self.selected = [0, 0]
+        
+        self.nums = [Cell(self.board[i][j], j*54 + 27 + 19, i*54 + 45 + 27 + 38, i, j)  # This 1-d list contains the numbers, 
+                                for j in range(self.cols) for i in range(self.rows)]    # each element is a Cell object.
+        
+        self.selected = [0, 0]                        # Keeps track of which number is currently selected.
         self.check = False
-        # self.solved = False
 
     def draw_box(self):
+        
+        # SOLVE 
         if self.solve_box.collidepoint(pygame.mouse.get_pos()):
             pygame.draw.rect(win, (123, 114, 67), [self.solve_box.x+6, self.solve_box.y+6,
                                     self.solve_box.width-16, self.solve_box.height-12], 0)
@@ -161,6 +188,7 @@ class Board(object):
         print_text(text_font_2, "Solve", self.solve_box.x +
                    22, self.solve_box.y + 5)
 
+        # RESET
         if self.reset_box.collidepoint(pygame.mouse.get_pos()):
             pygame.draw.rect(win, (123, 114, 67), [self.reset_box.x+6, self.reset_box.y+6,
                                     self.reset_box.width-16, self.reset_box.height-12], 0)
@@ -169,6 +197,7 @@ class Board(object):
         print_text(text_font_2, "Reset", self.reset_box.x +
                    22, self.solve_box.y + 5)
 
+        # CHECK
         if self.check_box.collidepoint(pygame.mouse.get_pos()):
             pygame.draw.rect(win, (123, 114, 67), [self.check_box.x+6, self.check_box.y+6,
                                     self.check_box.width-16, self.check_box.height-12], 0)
@@ -176,7 +205,7 @@ class Board(object):
         pygame.draw.rect(win, BLACK, self.check_box, 1)
         print_text(text_font_2, "Check", self.check_box.x +
                    18, self.check_box.y + 5)
-        pass
+                   
     
     def draw(self, win):
         
@@ -196,16 +225,21 @@ class Board(object):
             
             cell.draw(win)
 
+    # Syncs the grid and cells
     def cell_update(self):
         self.nums = [Cell(self.board[i][j], j*54 + 27 + 19, i*54 + 45 + 27 + 38, i, j) \
                     for j in range(self.cols) for i in range(self.rows)]
 
+    # Resets the grid
     def reset(self):
         self.board = copy.deepcopy(self.backup)
         self.cell_update()
 
+    # Solves the grid using backtracking algorithm
     def solve_(self):
+
         self.reset()
+        
         def _recurse():
             find = engine.find_empty_loc(self.board)
             if find == None:
@@ -231,8 +265,10 @@ class Board(object):
                     delay(2, 50)
 
             return False
+
         _recurse()
 
+    # Selects a cell
     def select_cell(self, win, pos):
         for cell in self.nums:
             if cell.rect.collidepoint(pos):
@@ -243,6 +279,8 @@ class Board(object):
                     cell.selected = True
                     return self.selected
 
+
+    # Keeps track of whether the check button is pressed or not.
     def check_press(self):
 
         if self.check:
@@ -250,26 +288,35 @@ class Board(object):
         else:
             self.check = True
 
+
+    # Makes the buttons clickable 
     def select_box(self, pos):
         if self.solve_box.collidepoint(pos):
-            # self._solve()
             self.solve_()
         elif self.reset_box.collidepoint(pos):
             self.reset()
         elif self.check_box.collidepoint(pos):
             self.check_press()
 
+
+    # Eraser
     def clear(self):
         self.board[self.selected[0]][self.selected[1]] = 0
         self.cell_update()
 
+
+    # Pencil.
     def edit(self, key):
         self.board[self.selected[0]][self.selected[1]] = key
         self.cell_update()
 
+# =========================================================================================
+
 
 def main():
 
+    # Due to a lack of creativity, the name is misleading, this function 
+    # creates the starting menu.
     def show_game_over_screen(minus):
         
         win.fill(BGCOLOR)
@@ -346,7 +393,10 @@ def main():
                         terminate()
                     if event.key == K_SPACE:
                         return minus
+
+                # Checks for mouse button press
                 if event.type == MOUSEBUTTONDOWN:
+                    # Checks for left mouse button press
                     if event.button == 1:
                         pos = pygame.mouse.get_pos()
                         if easy_rect.collidepoint(pos):
@@ -367,6 +417,7 @@ def main():
         draw_grid(win)
         _grid.draw_box()
 
+        # Animates the board display
         for cell in _grid.nums:
             if _grid.backup[cell.row][cell.col] != 0:
                 pygame.draw.rect(win, (24, 48, 75), [cell.rect[0]+6, cell.rect[1]+6, 
@@ -387,7 +438,7 @@ def main():
 
         board = Board(grid)
         animate(grid)
-        key = None
+        key = None                    # Keeps track of which number key is pressed
 
         while True:
             board.draw(win)
@@ -398,6 +449,7 @@ def main():
                 if (event.type == KEYDOWN and event.key == K_ESCAPE):
                     return
 
+                # Checks for number keys being pressed
                 if event.type == pygame.KEYDOWN:
                     if (event.key == K_1) or (event.key == K_KP1):
                         key = 1
@@ -429,10 +481,12 @@ def main():
                         else:
                             board.select_box(pos)
 
+            # Checks if the board is filled, if yes sets board checking to true.
             if engine.find_empty_loc(board.board) == None:
                 board.check = True
                 
 
+            # Checks if the player board is corrent, and does prints appropriate image.
             if board.check:
                 check_against = copy.deepcopy(board.backup)
                 engine.solve_grid(check_against)
@@ -453,12 +507,12 @@ def main():
                     
                     if (not c):
                         win.blit(cross_img, [
-                        win_wt//2 - cross_img.get_width()//2, 
-                        win_ht//2 - cross_img.get_height()//2])
+                            win_wt//2 - cross_img.get_width()//2, 
+                            win_ht//2 - cross_img.get_height()//2])
                     else:
                         win.blit(tick_img, [
-                        win_wt//2 - tick_img.get_width()//2,
-                        win_ht//2 - tick_img.get_height()//2])
+                            win_wt//2 - tick_img.get_width()//2,
+                            win_ht//2 - tick_img.get_height()//2])
                         board.check = False
                     pygame.display.update()                                    
                     delay(5, 150)
@@ -468,7 +522,8 @@ def main():
                 board.edit(key)
                 key = None
 
-            fps_clock.tick(60)
+            
+            fps_clock.tick(fps)
             pygame.display.update()
 
     while True:

@@ -1,2 +1,5 @@
 /ignore
 /__pycache__
+/venv
+/release
+/Sudoku.code-workspace
