@@ -1,8 +1,8 @@
-#Sudoku
+# Sudoku
 ---
 A simple Sudoku game.
 
-##Table of contents
+## Table of contents
 ---
 * [Info](#info)
 * [Instructions](#instructions)
