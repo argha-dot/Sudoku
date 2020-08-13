@@ -22,6 +22,7 @@ def print_text(font, text, x, y):
 
 
 def load_img(name):
+    
     fullname = os.path.join("assets", name)
     try:
         image = pygame.image.load(fullname)
@@ -52,11 +53,11 @@ def delay(j, d):
 
 # BOILERPLATE CODDE
 pygame.init()
-os.environ["SDL_VIDEO_WINDOW_POS"] = "1, 1"
+os.environ["SDL_VIDEO_WINDOW_POS"] = "10, 10"
 win_wt, win_ht = (9*16*4), (11*16*4)
 fps_clock = pygame.time.Clock()
 fps = 60
-win = pygame.display.set_mode((win_wt, win_ht))
+win = pygame.display.set_mode((win_wt, win_ht), NOFRAME)
 ico = load_img("ico.png")
 pygame.display.set_icon(ico)
 
